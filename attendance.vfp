@@ -1,0 +1,125 @@
+<apex:page wizard="true" standardController="Attendance__c" extensions="AttendanceExt002version" sidebar="false" showHeader="false" docType="html-5.0" >
+
+    <script type="text/javascript">
+    
+    
+    </script>    
+
+        <style>
+            table {
+            border: 1px solid black;
+            background-color: #d8d8d8;
+            }
+            
+            td {
+            padding: 5px;
+            }
+        </style>
+  
+    
+    <c:logo ></c:logo>
+    
+    <div align="center" style="font-size:16px; font-weight:bolder; text-decoration:underline"><br/>
+        <apex:outputText rendered="{!!removeStartHdr}"  >Select the program and location for the Attendance Record</apex:outputText>
+        <apex:outputText rendered="{!removeStartHdr}"  >Set TIME IN or TIME OUT as per Instructions Below</apex:outputText>
+        <br/><br/>
+        
+    </div>    
+    
+    <apex:pageBlock >    
+
+            <div align="center">                
+                <apex:form >
+                    <table style="font-size:12px; font-weight:bolder">
+                        
+                        <tr><td>PROGRAM</td><td><apex:inputField rendered="{!!removeStartHdr}" value="{!Attendance__c.Program__c}"/>
+                            <apex:outputText rendered="{!removeStartHdr}" value="{!Attendance__c.Program__c}"/>
+                            </td>
+                            <td></td>
+                            
+                        </tr>
+                        <tr><td>LOCATION</td><td><apex:inputField label="Location" rendered="{!!removeStartHdr}" value="{!Attendance__c.Site__c}"/>
+                            <apex:outputText rendered="{!removeStartHdr}" label="Location" value="{!Attendance__c.Site__c}"/>
+                            </td>
+                            <td><apex:commandButton rendered="{!!removeStartHdr}" value="NEXT" action="{!toPage1}"/>
+                            
+                            </td>
+                        </tr><br/>
+                        <tr><td> {!dow} </td>
+                            <td> {!hoy} </td>                           
+                        </tr>
+                        
+                        <!--  ADD DAY OF WEEK AND DATE!!!!!!! -->
+                        
+                    </table><br/>
+                    
+                    
+                </apex:form>
+            </div>
+            
+
+        
+        
+        
+        <apex:pageBlockSection >
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+    
+    <apex:pageBlock id="non" rendered="{!!firstScreen}">
+        
+        
+        
+            
+            <div align="center">                
+                <apex:form >
+                    <table style="font-size:12px; font-weight:bolder">
+                        
+                        <tr><td>
+                            <apex:outputText rendered="{!isStart}">DEFAULT TIME IN for this PROGRAM is  {!maptimechoice} </apex:outputText>
+                            <apex:outputText rendered="{!!isStart}">TIME OUT VALUES WILL BE SET TO PROGRAM END TIME {!maptimechoice} </apex:outputText>
+                            </td></tr>
+                        <tr><td>
+                            <apex:outputText rendered="{!isStart}">CHECK HERE TO SET TIME IN TO CURRENT TIME {!mapnowchoice}</apex:outputText>
+                            <apex:outputText rendered="{!!isStart}">CHECK HERE TO SET TIME OUT TO CURRENT TIME</apex:outputText>
+                            </td>
+                            <td>
+                                <apex:inputCheckbox id="userseltime" value="{!selectedtime}"/>                           
+                                
+                            </td>
+                            
+                            
+                            <td><apex:commandButton value="NEXT" action="{!toPage2}"/>
+                            </td>
+                            
+                        </tr><br/>
+                    </table>
+                    
+<!--       
+
+
+                    <table style="font-size:12px; font-weight:bolder"> 
+                        
+                        
+                        <tr><td>SET ALL </td><td>
+                            <apex:outputText rendered="{!isStart}">TIME IN VALUES TO THE CURRENT TIME {!mapnowchoice} </apex:outputText>
+                            <apex:outputText rendered="{!!isStart}">TIME OUT VALUES TO THE CURRENT TIME {!mapnowchoice} </apex:outputText>
+                            </td>
+                            <td><apex:commandButton value="NEXT" action="{!toPage2v2}"/>
+                            </td>
+                        </tr><br/>
+                        
+                    </table><br/>
+ -->                   
+                    
+                </apex:form>
+                
+                <apex:outputText style="font-size:12px; font-weight:bold">You will be able to edit individual's times on another screen.</apex:outputText>
+                
+                
+            </div>            
+            
+
+    </apex:pageBlock>
+    
+    
+</apex:page>
