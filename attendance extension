@@ -1,0 +1,512 @@
+public class AttendanceExt002version {
+   
+//  CLASS VARIABLES HERE
+
+    public attendance__c thisrecord {get; set;}
+    private ApexPages.standardController rts;
+    public string passid {get; set;}
+    
+    list <attendee__c> masterroster = new list <attendee__c>();        
+      
+    public list <attendee__c> roster {get; set;}
+
+    map <string, list<attendee__c>> mainmap = new map <string, list<attendee__c>>();
+    
+    public integer containers {get; set;} 
+    private string recordInView;   
+    private integer recordInVw;
+
+
+    private boolean firstscreen = true;    
+    private boolean isStart = true;
+    private boolean removeStartHdr = false;
+    private boolean ismorn;
+    
+    
+    private string maptimechoice;
+    private string mapnowchoice;
+    
+    private string selectedTime;
+    
+    private datetime dt = datetime.now();
+        
+    private string dow = dt.format('EEEE');
+   
+    integer m = dt.month();    
+    transient string fulldate = string.valueof(dt);    
+    transient string mon =timestrings.returnmonth(m);    
+    private string hoy = mon + ' ' + string.valueof(dt.day()) + ', ' + fulldate.substringbefore('-');
+    
+
+
+    
+//  AVAILABLE VALUES FOR SELECT TIME SHOULD BE 'PROGRAM' AND 'NOW'
+    
+    private boolean panellink1;
+    private boolean panellink2;
+    private boolean panellink3;
+    private boolean panellink4;
+    private boolean panellink5;
+    private boolean panellink6;
+    private boolean panellink7;
+    private boolean panellink8;
+    private boolean panellink9;
+    private boolean panellink10;
+    private boolean panellink11;
+    private boolean panellink12;
+    private boolean panellink13;
+    private boolean panellink14;
+    private boolean panellink15;
+
+    private boolean showrow1=true;
+
+        
+    list <attendanceSheetItems> guysngals;
+    
+    public list <attendanceSheetItems> getGuysngals() {
+        return guysngals;
+    }
+    
+
+//  THIS INNER CLASS TO HOLD ROSTER DETAILS INDIVIDUAL
+//  
+    
+    
+    public class attendanceSheetItems {
+        
+        private attendee__c attendee;
+        public attendanceSheetItems (attendee__c indiv) {
+            this.attendee = indiv;          
+        }
+        public boolean absent {
+            get {return attendee.absent__c;}
+        }
+        public string ordnid {
+            get {return attendee.holdid__c;}
+        }
+        public string name {
+            get {return attendee.att_name__c;}
+        }
+        public string timein {
+            get {return attendee.time_in__c;}
+        }
+        public string timeout {
+            get {return attendee.time_out__c;}
+        }
+        
+        
+        public string newtimein { get; set; }
+
+        public string newtimeout { get; set; }
+        
+        public boolean markabsent {get; set;}
+ 
+        
+    }
+    
+    
+    
+//      CONTROLLER CONSTRUCTOR HERE    
+
+    public attendanceExt002version (apexPages.StandardController controller)  {
+        thisrecord = (attendance__c)controller.getrecord();
+        rts = controller;
+        string passid = thisrecord.id;
+        system.debug(passid);
+      
+        roster = new list<attendee__c>();
+       
+
+        
+    }  
+
+
+    public boolean getIsStart() {
+        return isStart;
+    }
+
+    public boolean getRemoveStartHdr() {
+        return removeStartHdr;
+    }
+    
+    public boolean getIsMorn() {
+        return isMorn;
+    }
+    
+    
+    public boolean getFirstScreen() {
+        return firstScreen;
+    }
+       
+    public string getMapTimeChoice() {
+        return mapTimeChoice;
+    }
+    
+       
+    public string getMapNowChoice() {
+        return mapNowChoice;
+    }
+
+    public string getSelectedTime() {
+       return selectedTime;
+    }
+
+    public void setSelectedTime (string s) {
+        this.selectedTime = s;
+    }
+
+    public string getDOW() {
+        return dow;
+    }
+    
+    public string getHoy() {
+        return hoy;
+    }
+           
+    
+    public boolean getPanelLink1() {
+        return panelLink1;
+    }
+    
+    public boolean getPanelLink2() {
+        return panelLink2;
+    }
+    
+    public boolean getPanelLink3() {
+        return panelLink3;
+    }
+    
+    public boolean getPanelLink4() {
+        return panelLink4;
+    }
+    
+    public boolean getPanelLink5() {
+        return panelLink5;
+    }
+    
+    public boolean getPanelLink6() {
+        return panelLink6;
+    }
+    
+    public boolean getPanelLink7() {
+        return panelLink7;
+    }
+    
+    public boolean getPanelLink8() {
+        return panelLink8;
+    }
+    
+    public boolean getPanelLink9() {
+        return panelLink9;
+    }
+    
+    public boolean getPanelLink10() {
+        return panelLink10;
+    }
+    
+    public boolean getPanelLink11() {
+        return panelLink11;
+    }
+    
+    public boolean getPanelLink12() {
+        return panelLink12;
+    }
+    
+    public boolean getPanelLink13() {
+        return panelLink13;
+    }
+    
+    public boolean getPanelLink14() {
+        return panelLink14;
+    }
+    
+    public boolean getPanelLink15() {
+        return panelLink15;
+    }
+
+    public boolean getShowRow1() {
+        return showRow1;
+    }
+    
+    
+    public integer getContainers() {
+        return containers;
+    }
+    
+    public string getRecordInView() {
+        return recordInView;
+    }
+    
+    public integer getRecordInVw()  {
+        recordInVw = integer.valueof(recordInView);
+        return recordInVw;
+    }
+    
+    public void setRecordInView(string z) {
+        this.recordInView = z;
+    }
+  
+    
+    
+    
+    
+    public pageReference toPage1() {
+        
+        
+//  FILTER TO INSURE THAT USER HAS MADE BOTH REQUIRED SELECTIONS TO MOVE, OTHERWISE RETURN NULL        
+        
+        if (ApexPages.CurrentPage().getURL().toLowerCase().startsWith('/apex/program')) {
+
+//  (1) QUERY BUILT ON ENTERED VALUES
+
+            thisrecord = (attendance__c)rts.getRecord();
+
+            if (thisrecord.program__c == null || thisrecord.site__c == null) {
+                return null;
+            }
+            
+            else {
+            
+            transient list <attendance__c> existing = new list <attendance__c>([SELECT is_closed__c, site__c, program__c
+                FROM attendance__c WHERE is_closed__c = false AND site__c = :thisrecord.site__c AND program__c = :thisrecord.program__c LIMIT 1]);
+                
+                system.debug(existing);
+
+               
+                if (!existing.isempty()) {
+                    thisrecord = existing[0];
+                    isStart = false;
+                    system.debug(passid);
+                    
+                }
+                
+                removeStartHdr = true;
+                system.debug(passid);
+                
+                if (thisrecord.program__c == 'After School Program') {
+                    isMorn = false;
+                }
+                
+                else {
+                    isMorn = true;
+                }
+            
+            }
+
+//  NOW, CALL CLASS METHOD TO SET TIME VALUES FOR USER INPUT SELECTION ON THE NEXT SCREEN; THESE VALUES ARE PART OF THE PAGE MARKUP
+//  SO THAT'S WHY THEY ARE QUERIED HERE ...        
+                
+            maptimechoice = timeStrings.timechoice(isstart, ismorn, thisrecord.site__c);
+            system.debug(maptimechoice);
+            
+            mapnowchoice = timeStrings.utime();
+            firstScreen = false;
+        }
+                
+        return null;
+    } 
+
+    
+    
+    
+    
+    
+    
+  
+    public pageReference toPage2() {
+        
+//      NOW THAT WE HAVE SELECTEDTIME AS A VAR SET BY USER; FALSE = PROGRAM TIME AND TRUE = NOWTIME
+//      USER WILL HAVE SOME OTHER CHOICES TO MAKE IF THE RECORD ALREADY EXISTS....
+
+        system.debug(selectedtime);                 
+        system.debug(mapnowchoice);
+        system.debug(maptimechoice);
+             
+        if (isStart) {
+               
+            rts.save();            
+            thisrecord = (attendance__c)rts.getRecord();
+            
+            if (selectedtime == 'true') {
+                attendanceQueries.buildroster(thisrecord.site__c, thisrecord.program__c, thisrecord.id, mapnowchoice);                
+            }
+            else {
+                attendanceQueries.buildroster(thisrecord.site__c, thisrecord.program__c, thisrecord.id, maptimechoice);
+            }
+        }
+        
+        else {
+            thisrecord = (attendance__c)rts.getRecord();
+        }
+        
+        masterroster= attendanceQueries.fetchroster(thisrecord.id);
+
+//  ROSTER IS THE INITIALIZED DISPLAY LIST OBJECT... LOGIC TO DETERMINE IF ROSTER IS > THAN PANEL GRID ROWCOUNT; 
+//  IF ROSTER IS GREATER THAN, WRITE AND INVOKE A CLASS TO EXTRACT AND INSERT DATA FROM/TO THE ORIGINAL TABLE;
+//  POPULATE THE FIRST DISPLAY LIST....  ROSTER SHOULD BE MAPPED FROM MASTERROSTER PROGRAMMATICALLY, BASED UPON THE PAGE NUMBER REQUEST - A VARIABLE...
+//  
+//  
+        system.debug(masterroster.size());
+        
+        if (!masterroster.isempty()) {
+            
+            containers = moreDecimal.countcontainers(masterroster.size(), 15);            
+        }
+
+//  IN THIS INVOKED METHOD, THE MASTERROSTER (LIST OF ALL ATTENDEES) IS CONVERTED TO LIST OF LIST
+        
+        mainmap = attendanceQueries.buildMainMap(masterroster, 15);
+        
+        recordinview = '1';
+
+        system.debug(containers);
+        
+        roster = mainmap.get(recordinview);
+
+        
+//  THIS BUILDS OUR INNER CLASS LIST GUYSNGALS        
+
+        if (guysngals == null) {  
+            
+            guysngals = new list <attendanceSheetItems>();
+            for (attendee__c indiv : roster) {
+                guysngals.add(new attendanceSheetItems(indiv));
+            }
+            
+        }        
+        
+
+        system.debug(guysngals);
+        
+
+        return page.progattendance002002version;
+    }
+
+
+    
+    
+    
+
+    
+
+
+    
+    public pageReference saveValues() {
+
+//  THIS LOOP EXTRACTS ITEMS THAT HAVE BEEN CHANGED ON THE PAGE INTO A LIST - 'CHANGED'
+        
+        system.debug(guysngals[0].newtimein);
+        system.debug(guysngals[1].newtimein);
+        system.debug(guysngals[2].newtimein);
+        system.debug(guysngals[3].newtimein);
+
+              
+        
+        list <attendanceSheetItems> changed = new list <attendanceSheetItems>();
+        
+        for (attendanceSheetItems a : guysngals) {
+            
+            if (a.newtimein == null) {
+                a.newtimein = '';
+            }
+            if (a.newtimeout == null) {
+                a.newtimeout = '';
+            }            
+            
+            
+            if(a.newtimein.length()> 0 || a.newtimeout.length() > 0 || a.markabsent==true) {
+                
+                system.debug(a.newtimein);
+                               
+                changed.add(a);
+            }
+        }
+        
+        system.debug(changed);
+
+   
+        if (!changed.isempty()) {
+            
+            list <attendee__c> nrostitmz = new list <attendee__c>();
+            string intime='';
+            string outtime='';
+            boolean abs = false;
+            integer ord;
+            
+            integer z =0;
+            
+//  BUILD ATTENDEE__C OBJECT, REMOVE AND REPLACE THE OBJECT IN 'ROSTER' AS PER THE ORDINAL VALUE SPECIFIED 
+//  ALSO SHOULD BUILD DECLARE / INSTANTIATE NEW GUYSNGALS 
+//  THIS LOOP DECONSTRUCTS THE ATTENDANCESHEETITEMS LIST INTO AN ATTENDEE__C LIST... COMPATIBLE WITH ROSTER LIST        
+              
+            for (attendanceSheetItems b : changed) {
+                                
+                if (b.newtimein.length()>0) { 
+                    intime = b.newtimein;      
+                }
+                else {intime = b.timein;}
+                
+                if (b.newtimeout.length()>0) { 
+                    outtime = b.newtimeout;      
+                }
+                else {outtime = b.timeout;}  
+                
+                if (b.markabsent==true) { 
+                    abs = true;      
+                }
+                else {abs = b.absent;}
+                
+                nrostitmz.add(new attendee__c(holdid__c = b.ordnid, att_name__c = b.name, time_in__c = intime, time_out__c= outtime,
+                                             absent__c = abs, chgd__c=true));
+                
+                system.debug(nrostitmz[z]);
+                z++;
+                
+                intime='';
+                outtime='';
+                abs=false;
+            }
+            
+//  THIS LOOPS MAPS THE NEW VALUES INTO ROSTER...            
+            
+            for (attendee__c t : nrostitmz) {
+                ord = integer.valueof(t.holdID__c.substringbefore('/'));
+                roster.add(ord,t);
+                roster.remove(ord+1);
+            }
+            
+            system.debug(roster);
+            
+            guysngals.clear();
+
+//  NOW... WERE WE CHANGING PAGES, THE AMENDMENT TO THIS WHOLE PROCEDURE WOULD BE TO THEN UPDATE MAINMAP AND EXTRACT THE NEW ROSTER....            
+//  THIS BUILDS NEW INNER CLASS LIST FROM NEW ROSTER
+            
+            guysngals = new list <attendanceSheetItems>();
+            for (attendee__c indiv : roster) {
+                guysngals.add(new attendanceSheetItems(indiv));
+            }            
+            
+           
+            
+        } // CHANGED IS NOT EMPTY
+       
+            
+
+        
+        return null;
+        
+    } // PAGE REFERENCE SAVEVALUES()
+    
+
+    
+    public pageReference newView() {
+        
+        system.debug(recordInView);
+        system.debug(system.currentpagereference().getparameters().get('recordinview'));
+        
+        return null;
+    }
+    
+   
+}
