@@ -1,0 +1,116 @@
+public class FutureSetMiles {
+    
+//    FETCHES MILEAGE DATA FOR MILEAGE TRACKING APP    
+    
+    @future (callout=true)
+    public static void retrieveAndSetMileage (string id) {
+        
+        //	CREATE THE STRING VARIABLE REQUIRED TO CALL GOOGLE MAP METHODS AND A VARIABLE TO CONTAIN THE RETURN
+        //	
+        
+        string address1 = '';
+        string address2 = '';
+        decimal themileage;
+        string jsonreturn = '';
+        system.debug(id);
+        string parent = '';
+        string order = '';
+        string lat1 = '';
+        string lng1 = '';
+        string lat2 = '';
+        string lng2 = '';
+        list <destination__c> updateme = new list <destination__c>();
+        
+        list <destination__c> thisrecord = [SELECT id, order__c, street_address__c, city__c, state_and_zip__c,
+                                            travel_expense_request__r.id
+                                            FROM destination__c WHERE id = :id];  
+        string drivingdistance = '';
+        decimal ddist;
+        
+        //	QUERY FOR THE RECORDS IN THE DB IN ORDER TO ACCESS THE ADDRESS FIELDS        
+        
+        
+        list <destination__c> locs = [SELECT id, order__c, miles__c, travel_expense_request__r.id, street_address__c,
+                                      city__c, state_and_zip__c  FROM destination__c 
+                                      WHERE travel_expense_request__r.id = :thisrecord[0].travel_expense_request__r.id AND 
+                                      order__c = :(integer.valueof(thisrecord[0].order__c)-1) LIMIT 1];
+        
+        //        address1 = locs[0].street_address__c + ' ' +  locs[0].City__c + ' ' + locs[0].State_and_zip__c;
+        //        address2 = thisrecord[0].street_address__c + ' ' +  thisrecord[0].City__c + ' ' + thisrecord[0].State_and_zip__c;
+        
+        //        address1 = locs[0].loc_arguments__c;
+        //        address2 = thisrecord[0].loc_arguments__c;
+        
+        //	FOLLOWING REBUILDS THE ADDRESS QUERY STRING LOPPING OFF       
+        
+        address1 = locs[0].street_address__c + ' ' +  locs[0].City__c + ' ' + locs[0].State_and_zip__c;
+        address2 = thisrecord[0].street_address__c + ' ' +  thisrecord[0].City__c + ' ' + thisrecord[0].State_and_zip__c;
+        
+        googleMaps fetchTheMiles = new googleMaps();        
+        
+        //	THIS METHOD USES ADDRESSES        
+        
+        address1 = address1.replace(' ','+');
+        system.debug(address1);
+        address2 = address2.replace(' ','+');
+        system.debug(address2); 
+        jsonReturn = fetchTheMiles.getJsonResults(address1,address2);
+        
+        
+        
+        
+        //	THIS METHOD USES THE LOCATIONS IN LAT AND LONG
+        
+        
+        // USED FOR TESTING API        jsonreturn = fetchMiles.getJsonResults('52+Osceola+Rd+Wayne+Nj', '124+Crimson+Ln+Elizabethtown+PA');        
+        
+        
+        // 	THIS METHOD USES THE CLEANED AND COMPILED ADDRESS FIELDS
+        
+        system.debug (jsonreturn);
+        
+        list <string> updatedJson = fetchthemiles.givemebackjsonsections(jsonreturn);
+        
+        system.debug(updatedjson[0]);
+        system.debug(updatedjson[1]);
+        system.debug(updatedjson[2]);
+        system.debug(updatedjson[3]);
+        
+        drivingdistance = updatedjson[2].substringbefore('"duration"').substringafter('"distance"').substringbefore(' mi"').substringafterlast('"');
+        
+        system.debug(drivingdistance);
+        
+        //	THIS FOLLOWING IS  REPAIRED..... STILL PERMITTING "INVALID DECIMAL" ERROR...SURE.. BECAUSE DRIVING DISTANCE STARTED OUT AS A COMPILED STRING
+        //	REDUCING IT TO NO ELEMENTS DOES NOT MAKE IT NULL
+        
+        if (drivingdistance.length() <> 0 && drivingdistance.containsonly('.0123456789')) {
+            ddist = decimal.valueof(drivingdistance);
+        }
+        else {
+            ddist = 0;
+        }
+        
+        
+        
+        
+        
+        //  NOW WE WILL USE THE 'ID' TO UPDATE THE SUBJECT RECORD        
+        
+        
+        updateme.add(new destination__c(id=id, mileage__c=ddist));
+        system.debug(updateme);
+        if (!updateme.isempty()) {
+            update updateme;
+            updateme.clear();
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+    }
+    
+}
